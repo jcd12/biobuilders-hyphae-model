@@ -18,7 +18,6 @@ from matplotlib.patches import Rectangle
 from matplotlib.collections import PatchCollection
 matplotlib.rcParams.update({'font.size': 6})
 
-
 def get_parser():
     # build commandline parser
     parser = argparse.ArgumentParser(
@@ -51,21 +50,18 @@ def get_parser():
     """
     return parser
 
-
 def get_args():
     parser = get_parser()
     args = parser.parse_args()
     return args
 
-
 def plot_initial_hyphae(hyphae, tMax=100, xlim=(-100,100), ylim=(-100,100)):
-    """In R, you get the "dots" if points connecting line segments are identical when doing normal scatterplot.
+    """In R, you get the points if coordinates connecting line segments are identical when doing normal scatterplot.
     But with pyplot you don't - therefore this function for plotting initial hyphae"""
     fig, ax = plt.subplots(figsize=(5, 5))
     points = list(zip(hyphae['x0'],hyphae['y0']))
     plt.plot(points, ',', color='black')
     plt.show()
-
 
 def plot_hyphae(hyphae, tMax=100, xlim=(-100,100), ylim=(-100,100)):
     """Works as function in R-script, but currently not in use"""
@@ -77,10 +73,8 @@ def plot_hyphae(hyphae, tMax=100, xlim=(-100,100), ylim=(-100,100)):
     ax.margins(0.1)
     plt.show()
 
-
 def grid_bounding_boxes(w=10, xrng=(-70, 70), yrng=(-70, 70)):
-    """Function making the same grid_bounding_boxes as in R-script
-    Rectangle takes other inputs, thus I created a new grid_bounding_boxes for this"""
+    """Function making the same grid_bounding_boxes as in R-script"""
     x0 = [no for no in range(xrng[0], xrng[1]+w, w)]
     y0 = [no for no in range(yrng[0], yrng[1]+w, w)]
 
@@ -93,8 +87,9 @@ def grid_bounding_boxes(w=10, xrng=(-70, 70), yrng=(-70, 70)):
 
     return bbs
 
-
-def grid_bounding_boxes_test(w=10, xrng=(-70, 70), yrng=(-70, 70)):
+def grid_bounding_boxes_lower_left(w=10, xrng=(-70, 70), yrng=(-70, 70)):
+    """grid_bounding_boxes function for plotting substrate rectangles
+    Returns a dataframe of coordinates of all lower left corners"""
     x0 = [no for no in range(xrng[0], xrng[1]+w, w)]
     y0 = [no for no in range(yrng[0], yrng[1]+w, w)]
 
@@ -105,7 +100,6 @@ def grid_bounding_boxes_test(w=10, xrng=(-70, 70), yrng=(-70, 70)):
     centers = pd.DataFrame({0:xcenters, 1:ycenters})
 
     return centers-(w/2)
-
 
 def hyphae_hits_substrate(hl, bbs):
     m = len(hl)
@@ -118,19 +112,15 @@ def hyphae_hits_substrate(hl, bbs):
         xSAT = (x_val <= bbs[2]) & (bbs[0] <= x_val)
         ySAT = (y_val <= bbs[3]) & (bbs[1] <= y_val)
         bbInds = (xSAT & ySAT).index[(xSAT & ySAT) == True]   # index of the True in boolean series
-        #bbInds = sum(((x_val <= bbs[2]) & (bbs[0] <= x_val)) & ((y_val <= bbs[3]) & (bbs[1] <= y_val)))
-
         h2b.iloc[j, bbInds] = 1
-
     return h2b
 
 def tipExtensionMonod(ktip1, ktip2, Kt, l, S, Ks):
-    # source: Lejeune et al 1995, Morphology of Trichoderma reesei QM 9414 in Submerged Cultures
+    """source: Lejeune et al 1995, Morphology of Trichoderma reesei QM 9414 in Submerged Cultures"""
     return (ktip1 + ktip2*(l/(l+Kt))) * S/(S+Ks)
 
 def hyphal_length(x):
   return math.sqrt( (x["x"]-x["x0"])**2 + (x["y"]-x["y0"])**2 )
-
 
 def main(args):
     # PARAMETERS USED IN THE SIMULATION
@@ -140,7 +130,7 @@ def main(args):
 
     avgRate = 50  # average tip extension rate (?m/h), source: Spohr et al. 1998
     q = 0.005  # branching frequency (maybe need to be scaled of what the time step is)
-    N = 40  # max simulation rounds
+    N = 1000  # max simulation rounds
     M = 100000  # max hyphae
     tstep = 0.0005  # time step (h)
 
@@ -148,7 +138,6 @@ def main(args):
     maxktip = 155  # maximum tip extension rate, value estimated from Spohr et al 1998 figure 5
     ktip2 = maxktip - ktip1  # difference between ktip1 and maxktip
     Kt = 5  # saturation constant
-
 
     # Single square as growth area
     # put init_n spores on centers and define maxium width
@@ -185,9 +174,7 @@ def main(args):
     # append initial dataframe to snapshot lists
     snapShots[0] = (copy.deepcopy(hyphae))
     hyphaeSnapshots['0'] = (copy.deepcopy(hyphae))
-
     #plot_initial_hyphae(snapShots[0])
-
 
     S0 = 50000                      # initial substrate concentration
     St = [S0 for i in range(N)]     # track total substrate level over time
@@ -198,18 +185,18 @@ def main(args):
     S = pd.DataFrame({'S':[S0/len(S_bbs) for i in range(len(S_bbs))]})
     S_snapshots[0] = S
 
-    dls = [0]*N            # track biomass densities over time
-    r = 1                   # forgot specific name, but used to scale biomass density
+    dls = [0]*N                     # track biomass densities over time
+    r = 1                           # forgot specific name, but used to scale biomass density
 
     # actual simulation
     i, m = 0, 0
     while i < N and m < M:
-        m = len(hyphae)     # number of hyphae at this step
+        m = len(hyphae)             # number of hyphae at this step
 
         # get where each hyphae tip is in the substrate grid
         hyphae_substrate = hyphae_hits_substrate(hl=hyphae, bbs=S_bbs)
 
-        dl = 0              # track biomass at this step
+        dl = 0                      # track biomass at this step
 
         # loop through hyphae, find new coordinates for tips
         for j in range(m):
@@ -239,10 +226,10 @@ def main(args):
                 #b = hyphae['nevents'].iloc[j]
 
                 qApl = q
-                # qApl = q/(b+1)
+                # qApl = q/(b+1)        # q could be a function of number of events
                 # branching event (q should depend on l and/or nevents)
-                if np.random.uniform(0,1) < qApl:
 
+                if np.random.uniform(0,1) < qApl:
                     # the direcction a new branch will grow - randomly left or right
                     newdir = np.random.choice(leftright)
                     newangle = angle + newdir * round(np.random.uniform(minTheta,maxTheta))
@@ -251,9 +238,9 @@ def main(args):
                     hyphae['l'].iloc[j] += 1
 
                     # add new hyphae
-                    hyphae=hyphae.append({'x0': hi['x'], 'y0': hi['y'], 'x': hi['x'], 'y': hi['y'], 'angle': newangle, 'nevents': 0, 't': i, 'l': 0}, ignore_index=True)
+                    hyphae = hyphae.append({'x0': hi['x'], 'y0': hi['y'], 'x': hi['x'], 'y': hi['y'], 'angle': newangle, 'nevents': 0, 't': i, 'l': 0}, ignore_index=True)
 
-        ## Subtract the resources consumed in the last round of growth
+        # subtract the resources consumed in the last round of growth
         # S[i+1] = S[i] - min(r*dl, S[i])
         St[i] = S.sum()
         # save biomass at this timestep
@@ -266,7 +253,6 @@ def main(args):
             snapShots[i] = copy.deepcopy(hyphae)
             S_snapshots[i] = copy.deepcopy(S)
             hyphaeSnapshots[str(i)] = copy.deepcopy(hyphae)
-
 
     m = len(hyphae)
     dat = copy.deepcopy(hyphae)
@@ -300,21 +286,19 @@ def main(args):
             subplots[splot_index].add_collection(lc)
 
             # create continuous norm for substrate color mapping
-            substrate_norm = plt.Normalize(0, S0)
+            substrate_norm = plt.Normalize(0, S0/len(S_bbs))
             #subplots[splot_index].imshow(np.array(S).reshape(15,15), cmap='YlOrBr_r', norm=substrate_norm)
-            S_plot_bbs = grid_bounding_boxes_test(w=10, xrng=(-70, 70), yrng=(-70, 70))
+            S_plot_bbs = grid_bounding_boxes_lower_left(w=10, xrng=(-70, 70), yrng=(-70, 70))
 
             YlOrBr = cm.get_cmap('YlOrBr')
             patches, colors = list(), list()
             for j in range(len(S_plot_bbs)):
-                rect = plt.Rectangle((S_plot_bbs.iloc[j,0],S_plot_bbs.iloc[j,1]), width=10, height=10) #color=YlOrBr(S_snapshot_to_plot.iloc[j]/S0/len(S_bbs))
-                #subplots[splot_index].add_patch(rect)
+                rect = plt.Rectangle((S_plot_bbs.iloc[j,0], S_plot_bbs.iloc[j,1]), width=10, height=10) #color=YlOrBr(S_snapshot_to_plot.iloc[j]/S0/len(S_bbs))
                 patches.append(rect)
-                #colors.append(S_snapshot_to_plot.iloc[j]/(S0/len(S_bbs)))
-            pdb.set_trace()
-            colors = pd.DataFrame(S_snapshot_to_plot['S']/(S0/len(S_bbs))).to_numpy
-            p = PatchCollection(patches, cmap=cm.get_cmap('YlOrBr'))
-            p.set_array(np.array(colors))
+            #pdb.set_trace()
+
+            p = PatchCollection(patches, cmap=cm.get_cmap('YlOrBr'), alpha=0.5, norm=substrate_norm)
+            p.set_array(S_snapshot_to_plot['S'])
             subplots[splot_index].add_collection(p)
 
             subplots[splot_index].autoscale()
@@ -341,9 +325,7 @@ def main(args):
         # save last page
         pdf.savefig()
         plt.close(f)
-        print(f'# Done! Made pdf: {pdf_name}')
-
-    return
+    return pdf_name
 
 
 if __name__ == '__main__':
@@ -351,11 +333,7 @@ if __name__ == '__main__':
     start_time = datetime.now()
     args = get_args()
     print("# args:", args)
-    main(args)
-    print('# Done!')
+    pdf_name = main(args)
+    print(f'# Done! Made pdf: {pdf_name}')
     end_time = datetime.now()
     print('# Duration: {}'.format(end_time - start_time))
-
-
-# TANKER:
-# find ud af om det er rigtigt hvis du bare bruger S_snapshot og laver til 15x15 matrix og giver til imshow()
