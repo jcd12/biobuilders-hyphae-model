@@ -260,6 +260,8 @@ def main(args):
     y_range = (dat[['y0', 'y']].min().min(), dat[['y0', 'y']].max().max())
     tMax = max(dat['t'])
 
+    print('# Simulation done! Plotting...')
+
     # dimensions for subplots on one page (n-rows and m-cols)
     n, m = 3, 4
     pdf_name = 'simple_gallery_1000.pdf'
