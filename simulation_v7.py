@@ -254,14 +254,15 @@ def main(args):
             S_snapshots[i] = copy.deepcopy(S)
             hyphaeSnapshots[str(i)] = copy.deepcopy(hyphae)
 
+    """
     m = len(hyphae)
     dat = copy.deepcopy(hyphae)
     x_range = (dat[['x0', 'x']].min().min(), dat[['x0', 'x']].max().max())
     y_range = (dat[['y0', 'y']].min().min(), dat[['y0', 'y']].max().max())
     tMax = max(dat['t'])
+    """
 
     print('# Simulation done! Plotting...')
-
     # dimensions for subplots on one page (n-rows and m-cols)
     n, m = 3, 4
     pdf_name = 'simple_gallery_1000.pdf'
@@ -310,7 +311,6 @@ def main(args):
             subplots[splot_index].set_ylim(-60, 60)
             subplots[splot_index].set_xticks(list(range(-60,70,30)))
             subplots[splot_index].set_yticks(list(range(-60,70,30)))
-
             plt.tight_layout()
 
             # increment index counter
