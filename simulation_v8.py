@@ -7,8 +7,8 @@ import pandas as pd
 import numpy as np
 import math
 import matplotlib.pyplot as plt
-from matplotlib import collections as mc
 from matplotlib import cm
+from matplotlib import collections as mc
 import copy
 import pdb
 from matplotlib.backends.backend_pdf import PdfPages
@@ -142,7 +142,7 @@ def main(args):
 
     avgRate = 50  # average tip extension rate (?m/h), source: Spohr et al. 1998
     q = 0.005  # branching frequency (maybe need to be scaled of what the time step is)
-    N = 1000  # max simulation rounds
+    N = 200  # max simulation rounds
     M = 100000  # max hyphae
     tstep = 0.0005  # time step (h)
 
@@ -159,7 +159,6 @@ def main(args):
 
     # lists for saving results during the simulation
     snapShots = dict()
-    hyphae_dict = {'x0':[],'y0':[], 'x':[],'y':[],'angle':[]}
     hyphaeSnapshots = dict()
 
     # initializes the first spore(s) and growth angles
@@ -254,7 +253,7 @@ def main(args):
                     newangle = angle + newdir * round(np.random.uniform(minTheta,maxTheta))
 
                     # nevents goes one up, as there have been branching event for this hyphae
-                    hyphae.at[index,'l'] += 1
+                    hyphae.at[index,'nevents'] += 1
 
                     # add new hyphae
                     hyphae = hyphae.append({'x0': hi[2], 'y0': hi[3], 'x': hi[2], 'y': hi[3], 'angle': newangle, 'nevents': 0, 't': i, 'l': 0}, ignore_index=True)

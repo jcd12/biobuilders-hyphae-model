@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # coding=utf-8
 import sys
-from datetime import datetime
+import time
 import argparse
 import pandas as pd
 import numpy as np
@@ -54,6 +54,17 @@ def get_args():
     parser = get_parser()
     args = parser.parse_args()
     return args
+
+def timepoint(comment, timelist):
+    now = time.time()
+    timelist.append((comment, now))
+
+def showtimepoints(timelist):
+    m = max([ len(timelist[i][0]) for i in range(1, len(timelist)) ])
+    formatstring = "{:" + str(m+1) +"} {:.02f} seconds"
+    for i in range(1, len(timelist)):
+        print(formatstring.format(timelist[i][0]+':', timelist[i][1]-timelist[i-1][1]))
+    print(formatstring.format('Total:', timelist[-1][1]-timelist[0][1]))
 
 def plot_initial_hyphae(hyphae, tMax=100, xlim=(-100,100), ylim=(-100,100)):
     """In R, you get the points if coordinates connecting line segments are identical when doing normal scatterplot.
@@ -111,7 +122,7 @@ def hyphae_hits_substrate(hl, bbs):
 
         xSAT = (x_val <= bbs[2]) & (bbs[0] <= x_val)
         ySAT = (y_val <= bbs[3]) & (bbs[1] <= y_val)
-        bbInds = (xSAT & ySAT).index[(xSAT & ySAT) == True]   # index of the True in boolean series
+        bbInds = (xSAT & ySAT).index[(xSAT & ySAT) == True]   # index of the True ones in boolean series
         h2b.iloc[j, bbInds] = 1
     return h2b
 
@@ -130,7 +141,7 @@ def main(args):
 
     avgRate = 50  # average tip extension rate (?m/h), source: Spohr et al. 1998
     q = 0.005  # branching frequency (maybe need to be scaled of what the time step is)
-    N = 1000  # max simulation rounds
+    N = 200  # max simulation rounds
     M = 100000  # max hyphae
     tstep = 0.0005  # time step (h)
 
@@ -188,13 +199,16 @@ def main(args):
     dls = [0]*N                     # track biomass densities over time
     r = 1                           # forgot specific name, but used to scale biomass density
 
+    timepoint('Initializing spores and data handlers', timelist)
+
     # actual simulation
     i, m = 0, 0
     while i < N and m < M:
         m = len(hyphae)             # number of hyphae at this step
 
         # get where each hyphae tip is in the substrate grid
-        hyphae_substrate = hyphae_hits_substrate(hl=hyphae, bbs=S_bbs)
+        hyphae_substrate = hyphae_hits_substrate(hl=hyphae, bbs=S_bbs)      # takes some time
+        #timepoint('hyphae_hits_substrate', timelist)
 
         dl = 0                      # track biomass at this step
 
@@ -211,6 +225,7 @@ def main(args):
                                               S=S.loc[hyphae_substrate.iloc[j,:] == 1].iloc[0,0], Ks=200)
                 dx = extension * tstep * math.cos(angle * math.pi / 180)    # new coordinate in x-axis
                 dy = extension * tstep * math.sin(angle * math.pi / 180)    # new coordinate in y-axis
+                #timepoint('Tip extension Monod', timelist)
 
                 # biomass just created for hyphae j
                 dl_c = math.sqrt(dx**2 + dy**2)
@@ -218,28 +233,31 @@ def main(args):
 
                 # substrate used by the hyphal tip
                 S.loc[hyphae_substrate.iloc[j, :] == 1] = S.loc[hyphae_substrate.iloc[j, :] == 1].iloc[0, 0] - min(r*dl_c, S.loc[hyphae_substrate.iloc[j, :] == 1].iloc[0, 0])
+                #timepoint('substrate used by the hyphal tip', timelist)
 
                 # update data frame
                 hyphae['x'].iloc[j] = hi['x'] + dx
                 hyphae['y'].iloc[j] = hi['y'] + dy
                 hyphae['l'].iloc[j] = hyphal_length(hyphae.iloc[j,:])
                 #b = hyphae['nevents'].iloc[j]
+                #timepoint('Update df', timelist)
 
                 qApl = q
                 # qApl = q/(b+1)        # q could be a function of number of events
                 # branching event (q should depend on l and/or nevents)
 
                 if np.random.uniform(0,1) < qApl:
-                    # the direcction a new branch will grow - randomly left or right
+                    # the direction a new branch will grow - randomly left or right
                     newdir = np.random.choice(leftright)
                     newangle = angle + newdir * round(np.random.uniform(minTheta,maxTheta))
 
                     # nevents goes one up, as there have been branching event for this hyphae
-                    hyphae['l'].iloc[j] += 1
+                    hyphae['nevents'].iloc[j] += 1
 
                     # add new hyphae
                     hyphae = hyphae.append({'x0': hi['x'], 'y0': hi['y'], 'x': hi['x'], 'y': hi['y'], 'angle': newangle, 'nevents': 0, 't': i, 'l': 0}, ignore_index=True)
 
+                #timepoint('substrate used by the hyphal tip', timelist)
         # subtract the resources consumed in the last round of growth
         # S[i+1] = S[i] - min(r*dl, S[i])
         St[i] = S.sum()
@@ -254,7 +272,11 @@ def main(args):
             S_snapshots[i] = copy.deepcopy(S)
             hyphaeSnapshots[str(i)] = copy.deepcopy(hyphae)
 
+    timepoint('Actual simulation', timelist)
+    print('# Simulation done! Plotting...')
+
     """
+    # Outcommented in the R code
     m = len(hyphae)
     dat = copy.deepcopy(hyphae)
     x_range = (dat[['x0', 'x']].min().min(), dat[['x0', 'x']].max().max())
@@ -262,10 +284,9 @@ def main(args):
     tMax = max(dat['t'])
     """
 
-    print('# Simulation done! Plotting...')
     # dimensions for subplots on one page (n-rows and m-cols)
     n, m = 3, 4
-    pdf_name = 'simple_gallery_1000.pdf'
+    pdf_name = 'output_test.pdf'
     with PdfPages(pdf_name) as pdf:
         # initialize layout for plots
         f, axarr = plt.subplots(n, m, sharex='none', sharey='none')
@@ -327,15 +348,17 @@ def main(args):
         # save last page
         pdf.savefig()
         plt.close(f)
+        timepoint('Plotting to pdf', timelist)
     return pdf_name
 
 
 if __name__ == '__main__':
+    timelist = list()
+    timepoint('Start', timelist)
     print("# Running...")
-    start_time = datetime.now()
     args = get_args()
     print("# args:", args)
     pdf_name = main(args)
     print(f'# Done! Made pdf: {pdf_name}')
-    end_time = datetime.now()
-    print('# Duration: {}'.format(end_time - start_time))
+    # Display timing
+    showtimepoints(timelist)

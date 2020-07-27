@@ -1,0 +1,10 @@
+scipy
+numpy
+matplotlib
+cython
+networkx<2
+scikit-image
+pillow
+shapely
+meshpy
+opencv-python<4
