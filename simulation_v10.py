@@ -624,7 +624,7 @@ def main(args):
     S_tip = 10
     S_nontip = 1
     tstep = 2/60    # 1 minute
-    N = 10000  # max simulation rounds
+    N = 24/tstep  # max simulation rounds
     branch_substrate_dependency = 1.3
     # lists for saving results during the simulation
     snapshots = dict()
@@ -685,7 +685,7 @@ def main(args):
         St_snapshots[i] = copy.deepcopy(St)
         """
     #pdf_name = plot_to_pdf(snapshots, St_snapshots, S0, r=r)
-    dir_name = plot_for_animation(snapshots, St_snapshots, S0, dirname='chsC_spaA_24h', r=r, tstep=tstep, max_time = i)
+    dir_name = plot_for_animation(snapshots, St_snapshots, S0, dirname='wt_24h', r=r, tstep=tstep, max_time = i)
 
     filenames = sorted(dir_name+'/'+fn for fn in os.listdir(dir_name) if fn.startswith('image'))
     make_gif(filenames, f'{dir_name}/test.gif')
