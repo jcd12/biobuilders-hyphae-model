@@ -623,7 +623,7 @@ def main(args):
     D = 0.99
     S_tip = 10
     S_nontip = 1
-    tstep = 2/60    # 1 minute
+    tstep = 1/60    # 1 minute
     N = 24/tstep  # max simulation rounds
     branch_substrate_dependency = 1.3
     # lists for saving results during the simulation
@@ -679,13 +679,9 @@ def main(args):
             print(f"Iteration = {i}\tNumber of hyphal_elements = {len(hyphal_elements)}")
             snapshots[i] = copy.deepcopy(hyphal_elements)
             St_snapshots[i] = copy.deepcopy(St)
-        """
-        print(f"Iteration = {i}\tNumber of hyphal_elements = {len(hyphal_elements)}")
-        snapshots[i] = copy.deepcopy(hyphal_elements)
-        St_snapshots[i] = copy.deepcopy(St)
-        """
+
     #pdf_name = plot_to_pdf(snapshots, St_snapshots, S0, r=r)
-    dir_name = plot_for_animation(snapshots, St_snapshots, S0, dirname='chsC_3', r=r, tstep=tstep, max_time = i)
+    dir_name = plot_for_animation(snapshots, St_snapshots, S0, dirname='wt_12h_2', r=r, tstep=tstep, max_time = i)
 
     filenames = sorted(dir_name+'/'+fn for fn in os.listdir(dir_name) if fn.startswith('image'))
     make_gif(filenames, f'{dir_name}/test.gif')
