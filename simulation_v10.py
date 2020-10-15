@@ -551,7 +551,7 @@ def plot_for_animation(snapshots, St_snapshots, S0, dirname, r, tstep, max_time)
         ax.autoscale()
         #ax.margins(0.1)
         ax.set_title(
-            f"Time: {round(i*tstep,2)} h\n"
+            f"Time: {round(2*i*tstep,2)} h\n"
             f"Number of hyphal_elements: {len(snapshot_to_plot)}\n"
             f"Number of hyphal tips: {len(snapshot_to_plot[snapshot_to_plot.tip == True])}\n"
             f"Branching frequency: {round((len(snapshot_to_plot[snapshot_to_plot.tip == True]) / len(snapshot_to_plot))/(tstep*i+float('1e-10')),3)}\n"
@@ -623,7 +623,7 @@ def main(args):
     D = 0.99
     S_tip = 10
     S_nontip = 1
-    tstep = 2/60    # 1 minute
+    tstep = 1/60    # 1 minute
     N = 24/tstep  # max simulation rounds
     branch_substrate_dependency = 1.3
     # lists for saving results during the simulation
@@ -631,8 +631,8 @@ def main(args):
     St_snapshots = dict()
 
     # initialize the first two hyphal_elements growing from a single spore
-    n_hyphal_elements = 4
-    hyphal_elements_dict = {'x_mid':[-0.5,0.5,0,0], 'y_mid':[0,0,-0.5,0.5], 'angle':[180,0,270,90], 'tip':[True, True, True, True], 'time':[0,0,0,0]}
+    n_hyphal_elements = 8
+    hyphal_elements_dict = {'x_mid':[-0.5,0.5,0,0, np.sqrt(2)/4, -np.sqrt(2)/4, -np.sqrt(2)/4, np.sqrt(2)/4], 'y_mid':[0,0,-0.5,0.5, np.sqrt(2)/4, np.sqrt(2)/4, -np.sqrt(2)/4, -np.sqrt(2)/4], 'angle':[180,0,270,90,45,135,225,315 ], 'tip':[True, True, True, True, True, True, True, True], 'time':[0,0,0,0,0,0,0,0]}
     hyphal_elements = pd.DataFrame(hyphal_elements_dict)
     # append initial dataframe to snapshot lists
     snapshots[0] = (copy.deepcopy(hyphal_elements))
@@ -685,7 +685,7 @@ def main(args):
         St_snapshots[i] = copy.deepcopy(St)
         """
     #pdf_name = plot_to_pdf(snapshots, St_snapshots, S0, r=r)
-    dir_name = plot_for_animation(snapshots, St_snapshots, S0, dirname='wt_24h', r=r, tstep=tstep, max_time = i)
+    dir_name = plot_for_animation(snapshots, St_snapshots, S0, dirname='chsC_3', r=r, tstep=tstep, max_time = i)
 
     filenames = sorted(dir_name+'/'+fn for fn in os.listdir(dir_name) if fn.startswith('image'))
     make_gif(filenames, f'{dir_name}/test.gif')
