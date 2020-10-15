@@ -134,7 +134,7 @@ def tip_extension_monod(mu_max, sep_row, hyphal_elements, St, Ks, extension_subs
 
         new_coord, center_dist, angles = list(), list(), list()
         for _ in range(10):
-            new_angle = sep_row.angle + np.random.choice((-1, 1)) * round(np.random.gamma(*curvature_gamma_params))
+            new_angle = sep_row.angle + np.random.choice((-1, 1)) * round(5*np.random.gamma(*curvature_gamma_params))
             # check that new angle is >=0 and < 360
             if not 0 <= new_angle < 360:
                 new_angle = new_angle % 360
@@ -562,6 +562,8 @@ def plot_for_animation(snapshots, St_snapshots, S0, dirname, r, tstep, max_time)
         plt.axis('off')
 
         plt.tight_layout()
+        if not os.path.exists(dirname):
+            os.mkdir(dirname)
         plt.savefig(f"{dirname}/image-{'0'*(4-len(str(i)))}{i}.png")
         plt.close(fig)
 
@@ -683,7 +685,7 @@ def main(args):
         St_snapshots[i] = copy.deepcopy(St)
         """
     #pdf_name = plot_to_pdf(snapshots, St_snapshots, S0, r=r)
-    dir_name = plot_for_animation(snapshots, St_snapshots, S0, dirname='ATCC1510_3', r=r, tstep=tstep, max_time = i)
+    dir_name = plot_for_animation(snapshots, St_snapshots, S0, dirname='ATCC1510_4', r=r, tstep=tstep, max_time = i)
 
     filenames = sorted(dir_name+'/'+fn for fn in os.listdir(dir_name) if fn.startswith('image'))
     make_gif(filenames, f'{dir_name}/test.gif')
