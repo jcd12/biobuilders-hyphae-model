@@ -551,7 +551,7 @@ def plot_for_animation(snapshots, St_snapshots, S0, dirname, r, tstep, max_time)
         ax.autoscale()
         #ax.margins(0.1)
         ax.set_title(
-            f"Time: {round(2*i*tstep,2)} h\n"
+            f"Time: {round(i*tstep,2)} h\n"
             f"Number of hyphal_elements: {len(snapshot_to_plot)}\n"
             f"Number of hyphal tips: {len(snapshot_to_plot[snapshot_to_plot.tip == True])}\n"
             f"Branching frequency: {round((len(snapshot_to_plot[snapshot_to_plot.tip == True]) / len(snapshot_to_plot))/(tstep*i+float('1e-10')),3)}\n"
@@ -623,7 +623,7 @@ def main(args):
     D = 0.99
     S_tip = 10
     S_nontip = 1
-    tstep = 1/60    # 1 minute
+    tstep = 2/60    # 1 minute
     N = 24/tstep  # max simulation rounds
     branch_substrate_dependency = 1.3
     # lists for saving results during the simulation
