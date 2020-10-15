@@ -602,7 +602,6 @@ def main(args):
 
     avgRate = 50  # average tip extension rate (?m/h), source: Spohr et al. 1998
     q = 0.0005  # branching frequency (maybe need to be scaled of what the time step is)
-    N = 10000  # max simulation rounds
     M = 2000  # max hyphal_elements
 
     p_lateral = 3/4*q                # OBS!: probability of lateral branching for given hyphal_elements when enough substrate – find paper!
@@ -624,7 +623,8 @@ def main(args):
     D = 0.99
     S_tip = 10
     S_nontip = 1
-    tstep = 1/60    # 2 minutes
+    tstep = 2/60    # 1 minute
+    N = 10000  # max simulation rounds
     branch_substrate_dependency = 1.3
     # lists for saving results during the simulation
     snapshots = dict()
@@ -640,7 +640,7 @@ def main(args):
 
     # actual simulation
     i, m = 1, 0
-    while i < N and n_hyphal_elements < M:
+    while i < N:
         n_hyphal_elements = len(hyphal_elements)
         hyphal_elements_tip = hyphal_elements[hyphal_elements.tip == True]
         hyphal_elements_nontip = hyphal_elements[hyphal_elements.tip == False]
