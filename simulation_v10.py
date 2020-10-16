@@ -119,7 +119,6 @@ def tip_extension_monod(mu_max, sep_row, hyphal_elements, St, Ks, extension_subs
         return hyphal_elements
 
     extension = mu_max * St[int(r/20*sep_distance)] / (St[int(r/20*sep_distance)] + Ks)
-    # OBS!: find out how to make extension as a sort of probability - maybe add substrate limit
     if St[int(r/20*sep_distance)] > extension_substrate_min and extension > np.random.uniform(0, 1):
         # get coordinates of old tip
         x0_old, y0_old, x1_old, y1_old = midpoints_to_endpoints(sep_row)
@@ -445,10 +444,10 @@ def midpoints_to_endpoints(sep_row):
     return x0, y0, x1, y1
 
 
-def plot_to_pdf(snapshots, St_snapshots, S0, r):
+def plot_to_pdf(snapshots, St_snapshots, S0, r, tstep):
     # dimensions for subplots on one page (n-rows and m-cols)
     n, m = 3, 4
-    pdf_name = 'output_test.pdf'
+    pdf_name = 'ATCC_12h.pdf'
     with PdfPages(pdf_name) as pdf:
         # initialize layout for plots
         f, axarr = plt.subplots(n, m, sharex='none', sharey='none')
@@ -459,7 +458,6 @@ def plot_to_pdf(snapshots, St_snapshots, S0, r):
 
         S_max_index = np.argmax(St_snapshots[max(St_snapshots)])
 
-        # iterate through snapshots, selecting every second
         for i in range(0, len(snapshots)):
             snapshot_to_plot = snapshots[sorted(snapshots)[i]]
             St_to_plot = St_snapshots[sorted(snapshots)[i]]
@@ -471,8 +469,10 @@ def plot_to_pdf(snapshots, St_snapshots, S0, r):
             line_segments = [[list(zip(x0, y0))[i], list(zip(x1,y1))[i]] for i in
                              range(len(snapshot_to_plot))]
             # create continuous norm for mapping colors to hyphae according to time they occured
-            hyphal_elements_norm = plt.Normalize(0, len(snapshots))
-            lc = mc.LineCollection(line_segments, linewidths=0.5, norm=hyphal_elements_norm, cmap='OrRd_r') # norm=hyphae_norm, cmap='YlOrRd'
+            hyphal_elements_norm = plt.Normalize(-10, len(snapshots)*1.25)
+            red_cmap = clr.LinearSegmentedColormap.from_list('custom red', [(0, '#690909'), (0.5, '#AE1212'), (0.75, '#FD8D4C'),
+                                                                (1, '#FCE0CB')],N=400)
+            lc = mc.LineCollection(line_segments, linewidths=0.5, norm=hyphal_elements_norm, cmap=red_cmap) # OrRd_r
             lc.set_array(snapshot_to_plot['time'])
             subplots[splot_index].add_collection(lc)
 
@@ -483,11 +483,17 @@ def plot_to_pdf(snapshots, St_snapshots, S0, r):
             dist = np.sqrt(X ** 2 + Y ** 2)
             dist[dist > 20] = 20
             Z = [[St_to_plot[int(r/20*x)] for x in y] for y in dist]
-            subplots[splot_index].contourf(X, Y, Z, cmap=cm.get_cmap('YlGn'), norm=substrate_norm, alpha=0.5)  # norm=substrate_norm
+            subplots[splot_index].contourf(X, Y, Z, cmap=cm.get_cmap('YlGn'), norm=substrate_norm, alpha=0.7)
 
             subplots[splot_index].autoscale()
             subplots[splot_index].margins(0.1)
-            subplots[splot_index].set_title(f"Simulation round {i}\nSepta number: {len(snapshot_to_plot)}\nTip number: {len(snapshot_to_plot[snapshot_to_plot.tip == True])}\nBranching frequency: {len(snapshot_to_plot[snapshot_to_plot.tip == True])/len(snapshot_to_plot)}", fontsize=5)
+            subplots[splot_index].set_title(
+                f"Time: {round(2 * i * tstep, 2)} h\n"
+                f"Number of hyphal_elements: {len(snapshot_to_plot)}\n"
+                f"Number of hyphal tips: {len(snapshot_to_plot[snapshot_to_plot.tip == True])}\n"
+                f"Branching frequency: {round((len(snapshot_to_plot[snapshot_to_plot.tip == True]) / len(snapshot_to_plot)) / (tstep * i + float('1e-10')), 3)}\n"
+                f"(branches per hyphal element per hour)",
+                fontsize=5)
             subplots[splot_index].set_xlim(-20, 20)
             subplots[splot_index].set_ylim(-20, 20)
             subplots[splot_index].axis('off')
@@ -624,7 +630,7 @@ def main(args):
     S_tip = 10
     S_nontip = 1
     tstep = 1/60    # 1 minute
-    N = 24/tstep  # max simulation rounds
+    N = 20/tstep  # max simulation rounds
     branch_substrate_dependency = 1.3
     # lists for saving results during the simulation
     snapshots = dict()
@@ -680,15 +686,15 @@ def main(args):
             snapshots[i] = copy.deepcopy(hyphal_elements)
             St_snapshots[i] = copy.deepcopy(St)
 
-    #pdf_name = plot_to_pdf(snapshots, St_snapshots, S0, r=r)
-    dir_name = plot_for_animation(snapshots, St_snapshots, S0, dirname='wt_12h_2', r=r, tstep=tstep, max_time = i)
+    pdf_name = plot_to_pdf(snapshots, St_snapshots, S0, r=r, tstep=tstep)
+    #dir_name = plot_for_animation(snapshots, St_snapshots, S0, dirname='spaA_gul1_12h', r=r, tstep=tstep, max_time = i)
 
-    filenames = sorted(dir_name+'/'+fn for fn in os.listdir(dir_name) if fn.startswith('image'))
-    make_gif(filenames, f'{dir_name}/test.gif')
+    #filenames = sorted(dir_name+'/'+fn for fn in os.listdir(dir_name) if fn.startswith('image'))
+    #make_gif(filenames, f'{dir_name}/test.gif')
     print(snapshots[0])
     print('# Simulation done! Plotting...')
     # make function for plotting!
-    return
+    return pdf_name
 
 
 if __name__ == '__main__':
