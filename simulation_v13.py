@@ -142,9 +142,9 @@ def substrate_per_distance(n_tip, n_nontip, St, S0=200, r=200, h=1, D=0.1, S_tip
             if St[0] == 0:
                 dSdt = [0 for i in range(r+1)]
             else:
-                dSdt = [- (S_tip * n_tip + S_nontip * n_nontip)/r for i in range(r+1)]
+                dSdt = [- (S_tip * n_tip + S_nontip * n_nontip)/(2*np.pi*r) for i in range(r+1)]
         else:
-            dSdt = [- (S_tip * n_tip + S_nontip * n_nontip)/r for i in range(r)]
+            dSdt = [- (S_tip * n_tip + S_nontip * n_nontip)/(2*np.pi*r) for i in range(r)]
             dSdt.append(0)
 
     # gradial substrate field
