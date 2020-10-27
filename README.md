@@ -41,7 +41,8 @@ The program can be run as is or can be modified by a number of additional argume
 ```
 Name of folder of time-dependent png images and gif animation.
 Type: string. Default: None
-                                                                                 ```
+                                                                                 
+```
 -pdf
 ```
 Name of pdf of time-dependent subplots.
