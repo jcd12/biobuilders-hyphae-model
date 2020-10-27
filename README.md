@@ -25,10 +25,14 @@ Mycemulator is written in Python 3.6 and uses common Python 3 packages, all of w
 ### Installation
 
 To install, clone the repository or simply download the newest version of the simulation.
+
+```
+mycemulator_1.py
+```
 Make the file executable using
 
 ```
-chmod +x mycemulator_1
+chmod +x mycemulator_1.py
 ```
 
 ### Executing the program
@@ -136,7 +140,7 @@ Type: float. Default: 1
 Run the program from the terminal.
 
 ```
-./mycemulator_1 <additional arguments> 
+./mycemulator_1.py <additional arguments> 
 ```
 
 Acknowledgements
